@@ -23,7 +23,7 @@
 #include "PIA.h"
 #include "POKEY.h"
 #include "keyboard/KeyboardDriver.h"
-#include "joystick/JoystickDriver.h"
+#include "JoystickDriver.h"
 #include <atomic>
 #include <cstdint>
 
