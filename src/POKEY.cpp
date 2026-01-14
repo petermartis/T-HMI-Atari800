@@ -50,7 +50,7 @@ POKEY::POKEY() : sound(nullptr), actSampleIdx(0) {
 }
 
 void POKEY::init() {
-  sound = SoundFactory::create();
+  sound = Sound::create();
   if (sound) {
     sound->init();
   }

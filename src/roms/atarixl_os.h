@@ -42,4 +42,7 @@ constexpr uint16_t ATARIXL_OS_SIZE = 16384;
 // This is a placeholder - replace with full Altirra or original OS for games
 extern const uint8_t atarixl_os_rom[ATARIXL_OS_SIZE];
 
+// Get initialized OS ROM (call this instead of using atarixl_os_rom directly)
+const uint8_t* getAtariOSRom();
+
 #endif // ATARIXL_OS_H

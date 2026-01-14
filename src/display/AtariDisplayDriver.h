@@ -17,20 +17,21 @@
 #ifndef ATARIDISPLAYDRIVER_H
 #define ATARIDISPLAYDRIVER_H
 
-#include <cstdint>
+#include "DisplayDriver.h"
+#include <cmath>
 
 /**
- * @brief Interface for Atari display drivers.
+ * @brief Atari palette helper for display drivers.
  *
- * Extends the basic display driver interface with Atari-specific
- * 256-color palette support. The Atari 800 uses a 128/256 color
- * palette with hue and luminance components.
+ * Provides Atari-specific 256-color palette support. The Atari 800 uses
+ * a 256-color palette with 16 hues x 16 luminances.
+ *
+ * This class does NOT inherit from DisplayDriver - instead it provides
+ * palette conversion utilities that can be used alongside any DisplayDriver.
  */
-class AtariDisplayDriver {
+class AtariPalette {
 private:
   // Atari 800 NTSC palette (256 colors in RGB565 format)
-  // Based on the GTIA color generation with 16 hues x 16 luminances
-  // Hue is in upper 4 bits, luminance in lower 4 bits
   uint16_t atariColors[256];
 
   void generatePalette() {
@@ -49,7 +50,6 @@ private:
         r = g = b = y;
       } else {
         // NTSC color phase angles (approximate)
-        // Atari hue values map to specific phase angles
         static const float hueAngles[16] = {
             0.0f,    // 0: Gray (special case)
             0.0f,    // 1: Gold/Orange
@@ -96,50 +96,23 @@ private:
   }
 
 public:
-  AtariDisplayDriver() { generatePalette(); }
+  AtariPalette() { generatePalette(); }
 
   /**
-   * @brief Initializes the display hardware.
+   * @brief Provides access to the Atari palette in RGB565 format.
    */
-  virtual void init() = 0;
-
-  /**
-   * @brief Draws the frame/border with a uniform color.
-   *
-   * @param frameColor Atari color index (0-255).
-   */
-  virtual void drawFrame(uint16_t frameColor) = 0;
-
-  /**
-   * @brief Draws the provided bitmap.
-   *
-   * The bitmap contains pixel data in 16-bit RGB565 format.
-   *
-   * @param bitmap Pointer to the bitmap data.
-   */
-  virtual void drawBitmap(uint16_t *bitmap) = 0;
-
-  /**
-   * @brief Provides access to the Atari palette in display-native format.
-   *
-   * Returns a pointer to a 256-entry array representing the Atari
-   * color palette in RGB565 format.
-   *
-   * @return Pointer to a constant array of 16-bit color values (RGB565).
-   */
-  virtual const uint16_t *getAtariColors() const { return atariColors; }
+  const uint16_t *getAtariColors() const { return atariColors; }
 
   /**
    * @brief Convert Atari color index to RGB565.
-   *
-   * @param colorIndex Atari color index (0-255)
-   * @return RGB565 color value
    */
   uint16_t colorToRGB565(uint8_t colorIndex) const {
     return atariColors[colorIndex];
   }
-
-  virtual ~AtariDisplayDriver() {}
 };
+
+// For backward compatibility, provide AtariDisplayDriver as an alias
+// Note: Display drivers (ST7789V, etc.) inherit from DisplayDriver directly
+using AtariDisplayDriver = DisplayDriver;
 
 #endif // ATARIDISPLAYDRIVER_H

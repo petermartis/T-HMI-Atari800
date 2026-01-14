@@ -18,6 +18,7 @@
 #include "board/BoardFactory.h"
 #include "joystick/JoystickFactory.h"
 #include "keyboard/KeyboardFactory.h"
+#include "platform/PlatformFactory.h"
 #include "platform/PlatformManager.h"
 #include "roms/atarixl_os.h"
 #include "roms/atari_basic.h"
@@ -45,8 +46,8 @@ void Atari800Emu::intervalTimerScanKeyboardFunc() {
 
 void Atari800Emu::intervalTimerProfilingBatteryCheckFunc() {
   // Update profiling info
-  if (showperfvalues) {
-    numofcyclespersecond = sys.numofcyclespersecond;
+  if (showperfvalues.load()) {
+    numofcyclespersecond.store(sys.numofcyclespersecond.load());
   }
 
   // Battery check every 60 seconds
@@ -68,38 +69,50 @@ void Atari800Emu::cpuCode(void *parameter) {
 }
 
 void Atari800Emu::setup() {
+  // Initialize platform first
+  PlatformManager::initialize(PlatformNS::create());
+
   PlatformManager::getInstance().log(LOG_INFO, TAG, "Atari 800 XL Emulator starting...");
 
-  // Initialize platform
-  PlatformManager::initialize();
-
   // Initialize board driver
-  board = BoardFactory::create();
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Creating board driver...");
+  board = Board::create();
   if (board) {
+    PlatformManager::getInstance().log(LOG_INFO, TAG, "Initializing board...");
     board->init();
   }
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Board initialized");
 
   // Allocate RAM
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Allocating RAM...");
   ram = new uint8_t[RAM_SIZE];
   memset(ram, 0, RAM_SIZE);
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "RAM allocated");
 
-  // Initialize system with ROMs
-  sys.init(ram, atarixl_os_rom, atari_basic_rom);
+  // Initialize system with ROMs (use getters to get initialized ROM data)
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Initializing system...");
+  sys.init(ram, getAtariOSRom(), getAtariBasicRom());
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "System initialized");
 
   // Create keyboard driver
-  sys.keyboard = KeyboardFactory::create();
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Creating keyboard...");
+  sys.keyboard = Keyboard::create();
   if (sys.keyboard) {
     sys.keyboard->init();
   }
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Keyboard initialized");
 
   // Create joystick driver
-  JoystickDriver *joystick = JoystickFactory::create();
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Creating joystick...");
+  JoystickDriver *joystick = Joystick::create();
   if (joystick) {
     joystick->init();
     sys.setJoystick(joystick);
   }
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Joystick initialized");
 
   // Start CPU task on core 1
+  PlatformManager::getInstance().log(LOG_INFO, TAG, "Starting CPU task...");
   PlatformManager::getInstance().startTask(
       [this](void *param) { this->cpuCode(param); },
       1,  // Core 1
@@ -132,5 +145,5 @@ void Atari800Emu::loop() {
   PlatformManager::getInstance().waitMS(Config::REFRESHDELAY);
 
   // Update refresh counter
-  cntRefreshs = sys.antic.cntRefreshs;
+  cntRefreshs.store(sys.antic.cntRefreshs.load());
 }

@@ -52,11 +52,9 @@ static const char *TAG = "T-HMI-Atari800";
  * @brief Core 0 task - runs the main emulator loop
  */
 void core0Task(void *param) {
-  try {
-    atari800Emu.setup();
-  } catch (...) {
-    PlatformManager::getInstance().log(LOG_ERROR, TAG, "setup() failed");
-  }
+  Serial.println("core0Task starting setup...");
+  atari800Emu.setup();
+  Serial.println("core0Task setup complete");
 
   vTaskDelay(pdMS_TO_TICKS(1000));
   PlatformManager::getInstance().log(LOG_INFO, TAG, "Atari 800 XL Emulator ready");

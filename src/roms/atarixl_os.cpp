@@ -208,21 +208,26 @@ static const uint8_t screen_text[] = {
     0x00, 0x00, 0x00, 0x00, // 4 spaces
 };
 
-// Build the 16KB OS ROM
-alignas(4) const uint8_t atarixl_os_rom[ATARIXL_OS_SIZE] = {
-    // This will be initialized at compile time
-    // Structure:
-    // $C000-$CFFF: Floating point (filled with NOPs/RTI)
-    // $D000-$D7FF: Self-test (filled with placeholder)
-    // $D800-$DFFF: Normally I/O, but shadow charset area
-    // $E000-$E3FF: Character set
-    // $E400-$FFEF: OS routines
-    // $FFF0-$FFFF: Vectors
+// Forward declaration
+static void initAtariOSRom(uint8_t *rom);
 
-    // For now, fill with 0xFF (like empty EPROM)
-    // The actual initialization happens via the init routines
-    [0 ... ATARIXL_OS_SIZE - 1] = 0xFF
-};
+// Build the 16KB OS ROM - runtime initialized
+static uint8_t atarixl_os_rom_data[ATARIXL_OS_SIZE];
+static bool os_initialized = false;
+
+// Placeholder for backward compatibility (zero-initialized)
+alignas(4) const uint8_t atarixl_os_rom[ATARIXL_OS_SIZE] = {0};
+
+const uint8_t* getAtariOSRom() {
+    if (!os_initialized) {
+        // Fill with 0xFF (like empty EPROM)
+        memset(atarixl_os_rom_data, 0xFF, ATARIXL_OS_SIZE);
+        // Initialize with character set and boot code
+        initAtariOSRom(atarixl_os_rom_data);
+        os_initialized = true;
+    }
+    return atarixl_os_rom_data;
+}
 
 // Helper function to patch the ROM at runtime (called by emulator init)
 // Note: In a real implementation, this would load Altirra OS or original ROM

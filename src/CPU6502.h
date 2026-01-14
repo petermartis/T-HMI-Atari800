@@ -54,8 +54,6 @@ private:
   inline void bitBase() __attribute__((always_inline));
   inline void srfromflags();
   inline void flagsfromsr();
-  inline void pushtostack(uint8_t r);
-  inline uint8_t pullfromstack();
   void cmd6502oraIndirectX();
   void cmd6502oraZeropage();
   void cmd6502aslZeropage();
@@ -538,6 +536,10 @@ protected:
   void execute(uint8_t idx);
   void setPCToIntVec(uint16_t intvect, bool intfrombrk);
   void cmd6502rts();
+
+  // Stack operations - protected so subclasses can use them for interrupt handling
+  inline void pushtostack(uint8_t r);
+  inline uint8_t pullfromstack();
 
 public:
   // number of cycles since last adjustment

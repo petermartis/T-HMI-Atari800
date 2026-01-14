@@ -122,7 +122,8 @@ class ANTIC {
 private:
   uint8_t *ram;
   uint16_t *bitmap;            // Output bitmap (ATARI_WIDTH x ATARI_HEIGHT)
-  AtariDisplayDriver *display;
+  DisplayDriver *display;      // Display driver (ST7789V etc.)
+  AtariPalette palette;        // Atari 256-color palette
   GTIA *gtia;
 
   // ANTIC registers

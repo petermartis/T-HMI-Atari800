@@ -24,7 +24,10 @@
 // Atari BASIC ROM size: 8KB ($A000-$BFFF)
 constexpr uint16_t ATARI_BASIC_SIZE = 8192;
 
-// Minimal BASIC ROM placeholder
+// Minimal BASIC ROM placeholder (zero-initialized, use getter for actual data)
 extern const uint8_t atari_basic_rom[ATARI_BASIC_SIZE];
+
+// Get initialized BASIC ROM (call this instead of using atari_basic_rom directly)
+const uint8_t* getAtariBasicRom();
 
 #endif // ATARI_BASIC_H

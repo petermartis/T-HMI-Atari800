@@ -320,8 +320,13 @@ void Atari800Sys::scanKeyboard() {
 
   // Update joystick
   if (joystick) {
-    bool up, down, left, right, fire;
-    joystick->getValues(up, down, left, right, fire);
+    uint8_t joyVal = joystick->getValue();
+    // Decode C64-style joystick bits (active-low: 0=pressed)
+    bool up = (joyVal & 0x01) == 0;
+    bool down = (joyVal & 0x02) == 0;
+    bool left = (joyVal & 0x04) == 0;
+    bool right = (joyVal & 0x08) == 0;
+    bool fire = (joyVal & 0x10) == 0;
     pia.setJoystick1(up, down, left, right);
     gtia.setTrigger(0, fire);
   }
@@ -393,8 +398,3 @@ void Atari800Sys::run() {
   }
 }
 
-// Need to declare pushtostack as it's used in interrupt handling
-inline void Atari800Sys::pushtostack(uint8_t val) {
-  ram[0x100 + sp] = val;
-  sp--;
-}
