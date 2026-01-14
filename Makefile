@@ -56,7 +56,7 @@ endif
 # Upload baud rate
 UPLOAD_SPEED ?= 921600
 
-.PHONY: all compile upload clean monitor install-core help
+.PHONY: all compile upload clean monitor install-core install-libs help
 
 # Default target
 all: compile
@@ -74,6 +74,7 @@ help:
 	@echo "  clean        - Clean build files"
 	@echo "  monitor      - Open serial monitor"
 	@echo "  install-core - Install ESP32 Arduino core"
+	@echo "  install-libs - Install required Arduino libraries"
 	@echo "  help         - Show this help"
 	@echo ""
 	@echo "Board options:"
@@ -93,6 +94,17 @@ help:
 install-core:
 	$(ARDUINO_CLI) core update-index
 	$(ARDUINO_CLI) core install $(ESP32_CORE_VERSION)
+
+# Install required libraries
+install-libs:
+	@echo "Installing required libraries..."
+	$(ARDUINO_CLI) lib install "ESPAsyncWebServer-esphome"
+	$(ARDUINO_CLI) lib install "AsyncTCP"
+	$(ARDUINO_CLI) lib install "ArduinoJson"
+	@echo "Installing ESPAsyncDNSServer from GitHub..."
+	$(ARDUINO_CLI) lib install --git-url https://github.com/devyte/ESPAsyncDNSServer.git || \
+		(mkdir -p ~/Arduino/libraries && cd ~/Arduino/libraries && git clone https://github.com/devyte/ESPAsyncDNSServer.git 2>/dev/null || true)
+	@echo "Libraries installed."
 
 # Compile the project
 compile:
