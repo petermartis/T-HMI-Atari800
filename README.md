@@ -35,12 +35,18 @@ T-HMI-Atari800 is an Atari 800 XL computer emulator designed to run on ESP32-S3 
 
 ### Prerequisites
 
-1. Install Arduino CLI:
+1. Clone the repository:
+```bash
+git clone https://github.com/petermartis/T-HMI-Atari800.git
+cd T-HMI-Atari800
+```
+
+2. Install Arduino CLI:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
 ```
 
-2. Install ESP32 Arduino core:
+3. Install ESP32 Arduino core:
 ```bash
 make install-core
 ```
@@ -83,7 +89,7 @@ Place ROM files in the `src/roms/` directory and rebuild.
 ### Web Keyboard (Default)
 
 1. On first boot, the device starts as a WiFi access point
-2. Connect to the "Atari800-xxxx" network
+2. Connect to the "T-HMI-Atari800" network
 3. Navigate to http://192.168.4.1
 4. Enter your home WiFi credentials
 5. On subsequent boots, access the keyboard at the device's IP address

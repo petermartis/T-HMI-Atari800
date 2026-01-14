@@ -37,12 +37,15 @@ endif
 
 # Keyboard settings
 ifeq ($(KEYBOARD),BLE_KEYBOARD)
-    BUILD_FLAGS += -DUSE_BLEKB
+    BUILD_FLAGS += -DUSE_BLE_KEYBOARD
 else ifeq ($(KEYBOARD),WEB_KEYBOARD)
-    BUILD_FLAGS += -DUSE_WEBKB
+    BUILD_FLAGS += -DUSE_WEB_KEYBOARD
 else
     $(error Unknown KEYBOARD: $(KEYBOARD). Use BLE_KEYBOARD or WEB_KEYBOARD)
 endif
+
+# Add ESP32 define for Arduino compatibility
+BUILD_FLAGS += -DESP32
 
 # Serial port (auto-detect or override)
 PORT ?= $(shell ls /dev/ttyACM* 2>/dev/null | head -1)
