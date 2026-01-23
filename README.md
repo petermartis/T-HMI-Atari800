@@ -67,6 +67,37 @@ make BOARD=WAVESHARE KEYBOARD=BLE_KEYBOARD
 make upload PORT=/dev/ttyACM0
 ```
 
+## Testing
+
+The project includes a comprehensive test suite covering CPU emulation, memory system, and display processor.
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# Run specific test categories
+make test-cpu      # CPU 6502 emulation tests
+make test-memory   # Memory banking and address decoding
+make test-antic    # ANTIC display processor tests
+
+# Run with verbose output
+make test-verbose
+```
+
+### Test Coverage
+
+- **229 assertions** across **29 test cases**
+- CPU register and flag operations
+- Memory mapping and banking
+- ANTIC display modes and configuration
+- Stack, zero page, and addressing modes
+
+Tests run automatically on every push via GitHub Actions CI/CD.
+
+For more details, see [`test/README.md`](test/README.md).
+
 ## ROM Files
 
 The emulator includes a minimal OS ROM for testing. For full compatibility with Atari software, you should use proper ROM files:

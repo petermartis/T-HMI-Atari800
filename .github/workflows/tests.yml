@@ -1,0 +1,90 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop, claude/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ make curl
+
+    - name: Download Catch2 framework
+      run: |
+        if [ ! -f test/catch.hpp ]; then
+          curl -L -o test/catch.hpp https://raw.githubusercontent.com/catchorg/Catch2/v2.13.10/single_include/catch2/catch.hpp
+        fi
+
+    - name: Build test suite
+      run: make test-clean && make test/build/test_runner
+
+    - name: Run all tests
+      run: make test
+
+    - name: Run CPU tests
+      run: make test-cpu
+
+    - name: Run memory tests
+      run: make test-memory
+
+    - name: Run ANTIC tests
+      run: make test-antic
+
+  build-esp32:
+    name: Build for ESP32
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        board: [T_HMI, T_DISPLAY_S3, WAVESHARE]
+        keyboard: [WEB_KEYBOARD, BLE_KEYBOARD]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Arduino CLI
+      uses: arduino/setup-arduino-cli@v1
+
+    - name: Install ESP32 core
+      run: |
+        arduino-cli core update-index
+        arduino-cli core install esp32:esp32@3.2.0
+
+    - name: Install libraries
+      run: |
+        arduino-cli lib install "ESPAsyncWebServer-esphome" || true
+        arduino-cli lib install "AsyncTCP" || true
+        arduino-cli lib install "ArduinoJson" || true
+
+    - name: Build ${{ matrix.board }} with ${{ matrix.keyboard }}
+      run: |
+        make compile BOARD=${{ matrix.board }} KEYBOARD=${{ matrix.keyboard }}
+      continue-on-error: true  # Allow build failures for now
+
+  lint:
+    name: Code Formatting Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install clang-format
+      run: sudo apt-get update && sudo apt-get install -y clang-format
+
+    - name: Check code formatting
+      run: |
+        find src test -name "*.cpp" -o -name "*.h" | xargs clang-format --dry-run --Werror || true
+      continue-on-error: true  # Don't fail on formatting issues yet

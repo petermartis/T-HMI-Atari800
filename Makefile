@@ -56,7 +56,7 @@ endif
 # Upload baud rate
 UPLOAD_SPEED ?= 921600
 
-.PHONY: all compile upload clean monitor install-core install-libs help
+.PHONY: all compile upload clean monitor install-core install-libs help test test-cpu test-memory test-all test-clean test-verbose
 
 # Default target
 all: compile
@@ -75,6 +75,11 @@ help:
 	@echo "  monitor      - Open serial monitor"
 	@echo "  install-core - Install ESP32 Arduino core"
 	@echo "  install-libs - Install required Arduino libraries"
+	@echo "  test         - Build and run all tests"
+	@echo "  test-cpu     - Run CPU emulation tests"
+	@echo "  test-memory  - Run memory system tests"
+	@echo "  test-verbose - Run tests with verbose output"
+	@echo "  test-clean   - Clean test build files"
 	@echo "  help         - Show this help"
 	@echo ""
 	@echo "Board options:"
@@ -150,3 +155,77 @@ format:
 # Generate documentation
 docs:
 	doxygen Doxyfile
+
+# =============================================================================
+# TESTING TARGETS
+# =============================================================================
+
+# Test configuration
+TEST_DIR = test
+TEST_BUILD_DIR = test/build
+TEST_RUNNER = $(TEST_BUILD_DIR)/test_runner
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -I./src -I./test
+LDFLAGS = -lpthread
+
+# Test source files
+TEST_SOURCES = $(TEST_DIR)/test_main.cpp \
+               $(TEST_DIR)/test_cpu6502.cpp \
+               $(TEST_DIR)/test_memory.cpp \
+               $(TEST_DIR)/test_antic.cpp
+
+# CPU source files needed for testing
+CPU_SOURCES = src/CPU6502.cpp
+
+# Build and run all tests
+test: $(TEST_RUNNER)
+	@echo "Running all tests..."
+	@$(TEST_RUNNER)
+
+# Build test runner
+$(TEST_RUNNER): $(TEST_SOURCES) $(CPU_SOURCES)
+	@echo "Building test suite..."
+	@mkdir -p $(TEST_BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_SOURCES) $(CPU_SOURCES) -o $(TEST_RUNNER) $(LDFLAGS)
+
+# Run only CPU tests
+test-cpu: $(TEST_RUNNER)
+	@echo "Running CPU tests..."
+	@$(TEST_RUNNER) "[cpu]"
+
+# Run only memory tests
+test-memory: $(TEST_RUNNER)
+	@echo "Running memory tests..."
+	@$(TEST_RUNNER) "[memory]"
+
+# Run only ANTIC tests
+test-antic: $(TEST_RUNNER)
+	@echo "Running ANTIC tests..."
+	@$(TEST_RUNNER) "[antic]"
+
+# Run all tests with verbose output
+test-verbose: $(TEST_RUNNER)
+	@echo "Running tests with verbose output..."
+	@$(TEST_RUNNER) -s
+
+# Run tests with success/failure summary
+test-all: $(TEST_RUNNER)
+	@echo "Running comprehensive test suite..."
+	@$(TEST_RUNNER) --reporter console
+
+# Clean test build files
+test-clean:
+	@echo "Cleaning test build files..."
+	@rm -rf $(TEST_BUILD_DIR)
+
+# Coverage report (requires gcov/lcov)
+test-coverage: CXXFLAGS += --coverage -fprofile-arcs -ftest-coverage
+test-coverage: LDFLAGS += --coverage
+test-coverage: test-clean $(TEST_RUNNER)
+	@echo "Running tests with coverage..."
+	@$(TEST_RUNNER)
+	@echo "Generating coverage report..."
+	@lcov --capture --directory . --output-file coverage.info 2>/dev/null || echo "lcov not installed, skipping coverage"
+	@lcov --remove coverage.info '/usr/*' '*/test/*' --output-file coverage.info 2>/dev/null || true
+	@genhtml coverage.info --output-directory test/coverage 2>/dev/null || echo "genhtml not installed, skipping HTML report"
+	@echo "Coverage report generated in test/coverage/index.html"
